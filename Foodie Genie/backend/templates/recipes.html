@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Your Recommendations | Foodie Genie</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+  <style>
+    .badge-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: white;
+    }
+
+    .badge.available {
+      background: rgba(0, 245, 212, 0.15);
+      color: #00F5D4;
+      border: 1px solid rgba(0, 245, 212, 0.3);
+    }
+
+    .badge.missing {
+      background: rgba(255, 107, 107, 0.15);
+      color: #FF6B6B;
+      border: 1px solid rgba(255, 107, 107, 0.3);
+    }
+
+    .ingredient-section-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container animate">
+    <header class="header">
+      <div class="brand">
+        <div class="logo">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="FG Logo">
+        </div>
+        <div>
+          <h1>Foodie Genie</h1>
+        </div>
+      </div>
+      <a class="btn secondary" href="{{ url_for('ingredients') }}">Search Again</a>
+    </header>
+
+    <main>
+      <div class="text-center">
+        <h2 style="font-size: 2rem;">Top Matches for You</h2>
+        <p style="color: var(--text-muted); margin-top: 10px;">
+          Found {{ recipes|length }} recipes based on your ingredients.
+        </p>
+      </div>
+
+      {% if recipes %}
+      <div class="recipe-grid">
+        {% for recipe in recipes %}
+        <div class="recipe-card">
+          <div class="recipe-match {% if recipe.score > 0.8 %}match-high{% else %}match-partial{% endif %}">
+            {{ (recipe.score * 100) | round | int }}% Match
+          </div>
+          <div class="recipe-title">{{ recipe.name }}</div>
+
+          <div style="margin-bottom: 15px;">
+            <div class="ingredient-section-title">You Have</div>
+            <div class="badge-group">
+              {% for ing in recipe.available %}
+              <span class="badge available">✓ {{ ing }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          {% if recipe.missing %}
+          <div style="margin-bottom: 15px;">
+            <div class="ingredient-section-title">Missing</div>
+            <div class="badge-group">
+              {% for ing in recipe.missing %}
+              <span class="badge missing">+ {{ ing }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="recipe-steps"
+            style="margin-top: 20px; font-size: 0.9rem; color: var(--text-light); padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <details>
+              <summary style="cursor: pointer; color: var(--primary); font-weight: 600;">View Instructions</summary>
+              <ol style="padding-left: 20px; margin-top: 10px;">
+                {% for step in recipe.steps %}
+                <li>{{ step }}</li>
+                {% endfor %}
+              </ol>
+            </details>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center"
+        style="margin-top: 50px; padding: 40px; background: var(--card-bg); border-radius: var(--radius);">
+        <h3>No matches found 😕</h3>
+        <p style="color: var(--text-muted); margin-top: 10px;">Try adding more common ingredients.</p>
+        <a class="btn mt-2" href="{{ url_for('ingredients') }}">Add Ingredients</a>
+      </div>
+      {% endif %}
+
+    </main>
+
+    <footer class="text-center"
+      style="margin-top: 80px; padding-bottom: 40px; color: var(--text-muted); font-size: 0.8rem;">
+      &copy; 2026 Foodie Genie. AI-Generated Recipes.
+    </footer>
+  </div>
+</body>
+
+</html>
