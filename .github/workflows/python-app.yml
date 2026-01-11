@@ -46,6 +46,6 @@ jobs:
           --statistics
 
     - name: Run tests with pytest
-      working-directory: Foodie-Genie/backend
+      working-directory: backend
       run: |
         pytest
