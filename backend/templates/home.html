@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Foodie Genie | Smart AI Kitchen Assistant</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+</head>
+
+<body>
+  <div class="container animate">
+    <header class="header">
+      <div class="brand">
+        <div class="logo">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="FG Logo">
+        </div>
+        <div>
+          <h1>Foodie Genie</h1>
+        </div>
+      </div>
+      <div>
+        <a class="btn" href="{{ url_for('ingredients') }}">Get Started</a>
+      </div>
+    </header>
+
+    <main class="hero">
+      <div class="hero-content">
+        <h2>Cook Smarter,<br>Not Harder</h2>
+        <p>
+          Turn your leftover ingredients into 5-star meals.
+          Our AI-powered engine searches through thousands of recipes to find the perfect match for what you have in
+          your fridge right now.
+        </p>
+        <div style="margin-top: 40px;">
+          <a class="btn" href="{{ url_for('ingredients') }}" style="font-size: 1.2rem; padding: 15px 40px;">Find
+            Recipes</a>
+        </div>
+        <div style="margin-top: 20px;">
+          <span style="color: var(--text-muted); font-size: 0.9rem;">Powered by AI &bull; 1000+ Recipes</span>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+
+</html>

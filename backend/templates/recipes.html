@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Your Recommendations | Foodie Genie</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}">
+  <style>
+    .badge-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: white;
+    }
+
+    .badge.available {
+      background: rgba(0, 245, 212, 0.15);
+      color: #00F5D4;
+      border: 1px solid rgba(0, 245, 212, 0.3);
+    }
+
+    .badge.missing {
+      background: rgba(255, 107, 107, 0.15);
+      color: #FF6B6B;
+      border: 1px solid rgba(255, 107, 107, 0.3);
+    }
+
+    .ingredient-section-title {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container animate">
+    <header class="header">
+      <div class="brand">
+        <div class="logo">
+          <img src="{{ url_for('static', filename='images/logo.png') }}" alt="FG Logo">
+        </div>
+        <div>
+          <h1>Foodie Genie</h1>
+        </div>
+      </div>
+      <a class="btn secondary" href="{{ url_for('ingredients') }}">Search Again</a>
+    </header>
+
+    <main>
+      <div class="text-center">
+        <h2 style="font-size: 2rem;">Top Matches for You</h2>
+        <p style="color: var(--text-muted); margin-top: 10px;">
+          Found {{ recipes|length }} recipes based on your ingredients.
+        </p>
+      </div>
+
+      {% if recipes %}
+      <!-- Section 1: Cookable Recipes -->
+      {% set cookable = recipes | selectattr('can_cook', 'equalto', true) | list %}
+      {% if cookable %}
+      <div class="section-header" style="margin-top: 30px; margin-bottom: 20px;">
+        <h3 style="color: #00F5D4;">✨ You Can Cook These!</h3>
+      </div>
+      <div class="recipe-grid">
+        {% for recipe in cookable %}
+        <div class="recipe-card" data-id="{{ recipe.id }}">
+          <div class="recipe-match {% if recipe.score > 0.8 %}match-high{% else %}match-partial{% endif %}">
+            {{ (recipe.score * 100) | round | int }}% Match
+          </div>
+          <div class="recipe-title">{{ recipe.name }}</div>
+
+          {% if recipe.missing_main_warning %}
+          <div
+            style="background: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.3); color: #FFC107; padding: 8px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px;">
+            ⚠️ {{ recipe.missing_main_warning }}
+          </div>
+          {% endif %}
+
+          <div style="margin-bottom: 15px;">
+            <div class="ingredient-section-title">You Have</div>
+            <div class="badge-group">
+              {% for ing in recipe.available %}
+              <span class="badge available">✓ {{ ing }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          {% if recipe.substitutions %}
+          <div style="margin-bottom: 15px;">
+            <div class="ingredient-section-title">Substitutions Included</div>
+            <div class="badge-group">
+              {% for orig, sub in recipe.substitutions.items() %}
+              <span class="badge"
+                style="background: rgba(100, 149, 237, 0.2); color: cornflowerblue; border: 1px solid cornflowerblue;">
+                🔄 {{ orig }} ⮕ {{ sub }}
+              </span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          {% if recipe.missing %}
+          <div style="margin-bottom: 15px;">
+            <div class="ingredient-section-title">Missing</div>
+            <div class="badge-group">
+              {% for ing in recipe.missing %}
+              <span class="badge missing">+ {{ ing }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="recipe-steps"
+            style="margin-top: 20px; font-size: 0.9rem; color: var(--text-light); padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <details>
+              <summary style="cursor: pointer; color: var(--primary); font-weight: 600;">View Instructions</summary>
+              <ol style="padding-left: 20px; margin-top: 10px;">
+                {% for step in recipe.steps %}
+                <li>{{ step }}</li>
+                {% endfor %}
+              </ol>
+            </details>
+          </div>
+
+          <!-- Feedback Buttons -->
+          <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <button class="btn-feedback" onclick="sendFeedback('{{ recipe.id }}', 'select', this)"
+              style="flex: 1; padding: 6px; border: 1px solid var(--primary); background: transparent; color: var(--primary); border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+              👍 I'll Cook This
+            </button>
+            <button class="btn-feedback" onclick="sendFeedback('{{ recipe.id }}', 'reject', this)"
+              style="flex: 1; padding: 6px; border: 1px solid var(--text-muted); background: transparent; color: var(--text-muted); border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+              👎 Not Interested
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Section 2: Closest Recipes -->
+      {% set closest = recipes | selectattr('can_cook', 'equalto', false) | list %}
+      {% if closest %}
+      <div class="section-header"
+        style="margin-top: 50px; margin-bottom: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px;">
+        <h3 style="color: #FFC107;">🛒 Closest Recipes (Missing Ingredients)</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">You are missing a main ingredient for these, but they
+          are close!</p>
+      </div>
+      <div class="recipe-grid">
+        {% for recipe in closest %}
+        <div class="recipe-card" data-id="{{ recipe.id }}" style="opacity: 0.85;">
+          <div class="recipe-match match-partial">
+            {{ (recipe.score * 100) | round | int }}% Match
+          </div>
+          <div class="recipe-title">{{ recipe.name }}</div>
+
+          {% if recipe.missing_main_warning %}
+          <div
+            style="background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.3); color: #FF6B6B; padding: 8px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px;">
+            ⚠️ {{ recipe.missing_main_warning }}
+          </div>
+          {% endif %}
+
+          <div style="margin-bottom: 15px;">
+            <div class="ingredient-section-title">You Have</div>
+            <div class="badge-group">
+              {% for ing in recipe.available %}
+              <span class="badge available">✓ {{ ing }}</span>
+              {% endfor %}
+            </div>
+          </div>
+
+          {% if recipe.substitutions %}
+          <div style="margin-bottom: 15px;">
+            <div class="ingredient-section-title">Substitutions</div>
+            <div class="badge-group">
+              {% for orig, sub in recipe.substitutions.items() %}
+              <span class="badge"
+                style="background: rgba(100, 149, 237, 0.2); color: cornflowerblue; border: 1px solid cornflowerblue;">
+                🔄 {{ orig }} ⮕ {{ sub }}
+              </span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          {% if recipe.missing %}
+          <div style="margin-bottom: 15px;">
+            <div class="ingredient-section-title">All Missing</div>
+            <div class="badge-group">
+              {% for ing in recipe.missing %}
+              <span class="badge missing">+ {{ ing }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="recipe-steps"
+            style="margin-top: 20px; font-size: 0.9rem; color: var(--text-light); padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <details>
+              <summary style="cursor: pointer; color: var(--primary); font-weight: 600;">View Instructions</summary>
+              <ol style="padding-left: 20px; margin-top: 10px;">
+                {% for step in recipe.steps %}
+                <li>{{ step }}</li>
+                {% endfor %}
+              </ol>
+            </details>
+          </div>
+          <!-- Feedback Buttons (Also allowed here) -->
+          <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <button class="btn-feedback" onclick="sendFeedback('{{ recipe.id }}', 'select', this)"
+              style="flex: 1; padding: 6px; border: 1px solid var(--primary); background: transparent; color: var(--primary); border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+              👍 I'll Cook This
+            </button>
+            <button class="btn-feedback" onclick="sendFeedback('{{ recipe.id }}', 'reject', this)"
+              style="flex: 1; padding: 6px; border: 1px solid var(--text-muted); background: transparent; color: var(--text-muted); border-radius: 6px; cursor: pointer; font-size: 0.8rem;">
+              👎 Not Interested
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% else %}
+      <div class="text-center"
+        style="margin-top: 50px; padding: 40px; background: var(--card-bg); border-radius: var(--radius);">
+        <h3>No matches found 😕</h3>
+        <p style="color: var(--text-muted); margin-top: 10px;">Try adding more common ingredients.</p>
+        <a class="btn mt-2" href="{{ url_for('ingredients') }}">Add Ingredients</a>
+      </div>
+      {% endif %}
+
+    </main>
+
+    <footer class="text-center"
+      style="margin-top: 80px; padding-bottom: 40px; color: var(--text-muted); font-size: 0.8rem;">
+      &copy; 2026 Foodie Genie. AI-Generated Recipes.
+    </footer>
+  </div>
+  </div>
+  <script>
+    function sendFeedback(recipeId, action, btnElement) {
+      fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipe_id: recipeId, action: action })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === 'success') {
+            // Visual feedback
+            const card = btnElement.closest('.recipe-card');
+            if (action === 'reject') {
+              card.style.opacity = '0.5';
+            } else {
+              card.style.border = '2px solid var(--primary)';
+            }
+            // Disable buttons
+            const buttons = card.querySelectorAll('button.btn-feedback');
+            buttons.forEach(b => b.disabled = true);
+          }
+        })
+        .catch(console.error);
+    }
+  </script>
+</body>
+
+</html>
