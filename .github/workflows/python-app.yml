@@ -17,6 +17,15 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Debug workspace
+      run: |
+        echo "Current directory:"
+        pwd
+        echo "Repo root:"
+        ls
+        echo "Backend folder:"
+        ls backend
+
     - name: Set up Python 3.10
       uses: actions/setup-python@v5
       with:
@@ -26,19 +35,17 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
-        if [ -f Foodie-Genie/backend/requirements.txt ]; then
-          pip install -r Foodie-Genie/backend/requirements.txt
-        fi
+        pip install -r backend/requirements.txt
 
     - name: Lint with flake8
       run: |
-        flake8 Foodie-Genie/backend \
+        flake8 backend \
           --count \
           --select=E9,F63,F7,F82 \
           --show-source \
           --statistics
 
-        flake8 Foodie-Genie/backend \
+        flake8 backend \
           --count \
           --exit-zero \
           --max-complexity=10 \
@@ -47,5 +54,4 @@ jobs:
 
     - name: Run tests with pytest
       working-directory: backend
-      run: |
-        pytest
+      run: pytest
